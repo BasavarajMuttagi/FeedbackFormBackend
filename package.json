@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "prettier": "prettier --check \"**/*.{js,ts,jsx,tsx,json,css,scss,md}\"",
     "format": "prettier --write \"**/*.{js,ts,jsx,tsx,json,css,scss,md}\"",
-    "flow": "npm run lint && npm run format && npm run build"
+    "flow": "npm run lint && npm run format && npm run build",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
