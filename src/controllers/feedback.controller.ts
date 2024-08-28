@@ -137,6 +137,7 @@ export const getFormResponses = async (req: Request, res: Response) => {
       formId: formWithResponses.id,
       createdAt: formWithResponses.createdAt,
       formName: formWithResponses.formName,
+      viewCount: formWithResponses.viewCount,
       responseCount: formWithResponses._count.responses,
       responses: formattedResponses,
     };
@@ -155,6 +156,7 @@ export const getAllFormsOverview = async (req: Request, res: Response) => {
         id: true,
         createdAt: true,
         formName: true,
+        viewCount: true,
         _count: {
           select: { responses: true },
         },
@@ -169,11 +171,32 @@ export const getAllFormsOverview = async (req: Request, res: Response) => {
       createdAt: form.createdAt,
       formName: form.formName,
       submissionCount: form._count.responses,
+      viewCount: form.viewCount,
     }));
 
     res.json(result);
   } catch (error) {
     console.error("Error fetching forms overview:", error);
     res.status(500).json({ error: "Failed to fetch forms overview" });
+  }
+};
+
+export const incrementViewCount = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    await prisma.form.update({
+      where: { id },
+      data: {
+        viewCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Error incrementing view count:", error);
+    res.status(500).json({ error: "Failed to increment view count" });
   }
 };

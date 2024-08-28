@@ -12,6 +12,7 @@ model Form {
   formName   String
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
+  viewCount  Int         @default(0)
   formFields FormField[]
   responses  Response[]
 }

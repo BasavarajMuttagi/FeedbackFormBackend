@@ -6,6 +6,7 @@ import {
   submitResponse,
   getFormResponses,
   getAllFormsOverview,
+  incrementViewCount,
 } from "../controllers/feedback.controller";
 
 const FeedbackRouter = express.Router();
@@ -16,5 +17,5 @@ FeedbackRouter.post("/forms/create", createForm);
 FeedbackRouter.get("/forms/:id", getForm);
 FeedbackRouter.post("/forms/:id/responses", submitResponse);
 FeedbackRouter.get("/forms/:id/responses", getFormResponses);
-
+FeedbackRouter.get("/forms/increment-view/:id", incrementViewCount);
 export default FeedbackRouter;
