@@ -59,35 +59,121 @@ export const getForm = async (req: Request, res: Response) => {
 
 export const submitResponse = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { fields } = req.body;
+  const { formFields } = req.body;
+
   try {
+    const form = await prisma.form.findUnique({
+      where: { id },
+    });
+
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+
     const response = await prisma.response.create({
       data: {
-        formId: id,
+        form: { connect: { id: form.id } },
         formFields: {
-          create: fields.map((field: any) => ({
+          create: formFields.map((field: any) => ({
             value: field.value,
-            fieldId: field.id,
+            formField: { connect: { id: field.id } },
           })),
         },
       },
-      include: { formFields: true },
+      include: {
+        form: true,
+        formFields: {
+          include: {
+            formField: true,
+          },
+        },
+      },
     });
+
     res.json(response);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to submit response" });
   }
 };
 
 export const getFormResponses = async (req: Request, res: Response) => {
   const { id } = req.params;
+
   try {
-    const responses = await prisma.response.findMany({
-      where: { formId: id },
-      include: { formFields: true },
+    const formWithResponses = await prisma.form.findUnique({
+      where: { id },
+      include: {
+        formFields: true,
+        responses: {
+          include: {
+            formFields: {
+              include: {
+                formField: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: { responses: true },
+        },
+      },
     });
-    res.json(responses);
+
+    if (!formWithResponses) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+
+    const formattedResponses = formWithResponses.responses.map((response) => ({
+      responseId: response.id,
+      createdAt: response.createdAt,
+      fields: response.formFields.map((fieldResponse) => ({
+        label: fieldResponse.formField.label,
+        value: fieldResponse.value,
+      })),
+    }));
+
+    const result = {
+      formId: formWithResponses.id,
+      createdAt: formWithResponses.createdAt,
+      formName: formWithResponses.formName,
+      responseCount: formWithResponses._count.responses,
+      responses: formattedResponses,
+    };
+
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ error: "Failed to retrieve responses" });
+    console.error("Error fetching form responses:", error);
+    res.status(500).json({ error: "Failed to fetch form responses" });
+  }
+};
+
+export const getAllFormsOverview = async (req: Request, res: Response) => {
+  try {
+    const formsOverview = await prisma.form.findMany({
+      select: {
+        id: true,
+        createdAt: true,
+        formName: true,
+        _count: {
+          select: { responses: true },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const result = formsOverview.map((form) => ({
+      formId: form.id,
+      createdAt: form.createdAt,
+      formName: form.formName,
+      submissionCount: form._count.responses,
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching forms overview:", error);
+    res.status(500).json({ error: "Failed to fetch forms overview" });
   }
 };

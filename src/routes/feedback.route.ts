@@ -5,11 +5,13 @@ import {
   getForm,
   submitResponse,
   getFormResponses,
+  getAllFormsOverview,
 } from "../controllers/feedback.controller";
 
 const FeedbackRouter = express.Router();
 
 FeedbackRouter.get("/forms", getAllForms);
+FeedbackRouter.get("/forms/overview", getAllFormsOverview);
 FeedbackRouter.post("/forms/create", createForm);
 FeedbackRouter.get("/forms/:id", getForm);
 FeedbackRouter.post("/forms/:id/responses", submitResponse);
